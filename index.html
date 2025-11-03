@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Noise Map</title>
+
+  <link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
+  <link rel="icon" href="icons/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#2563eb">
+  
+  <!-- App styles -->
+  <link rel="stylesheet" href="./style.css" />
+  
+</head>
+<body>
+  <div class="app">
+	<div class="sidebar-body">
+
+	  <!-- DATA BLOCK -->
+	  <div class="filter-block">
+	    <div class="filter-block-header">
+	      <span>Data Link</span>
+	    </div>
+	
+	    <div class="filter-hint">
+	      <div>
+	        <strong>Folder:</strong><br>
+	        <a class="sidebar-link"
+	           href="https://drive.google.com/drive/folders/139H73GKeLnDXwqWwc60kmA1UkxYytM7V?usp=sharing"
+	           target="_blank" rel="noopener noreferrer">
+	          Data Folder
+	        </a>
+	      </div>
+	
+	      <div style="margin-top:8px;">
+	        <strong>Current Sheet:</strong><br>
+	        <a class="sidebar-link"
+	           href="https://docs.google.com/spreadsheets/d/1ro2RikBI665e5VLKk8MPUylEkAEJIhfKeBo46AGimLo/edit?usp=drive_link"
+	           target="_blank" rel="noopener noreferrer">
+	          Main Sheet
+	        </a>
+	      </div>
+	
+	      <div style="margin-top:12px; font-size:11px; line-height:1.4; color:#475569;">
+	        <strong>Note:</strong><br>
+	        Gmail U/N: <span style="user-select:text;">unitnoise3@gmail.com</span><br>
+	        Gmail P/Word: <span style="user-select:text;">Password100%</span><br>
+			Github U/N: <span style="user-select:text;">Noise-unit</span><br>
+			Github P/Word: <span style="user-select:text; ">Noiseunit3</span>
+	      </div>
+	    </div>
+	  </div>
+		
+	  <!-- DATE RANGE FILTER -->
+	  <div class="filter-block">
+	    <div class="filter-block-header">
+	      <span>Filter by Start Date range</span>
+	    </div>
+	
+	    <label style="display:block; font-size:12px; color:#475569; margin-bottom:6px;">
+	      From:
+	      <input id="filter-date-start" type="date">
+	    </label>
+	
+	    <label style="display:block; font-size:12px; color:#475569;">
+	      To:
+	      <input id="filter-date-end" type="date">
+	    </label>
+	  </div>
+	
+	  <!-- DETERMINATION FILTER -->
+	  <div class="filter-block">
+	    <div class="filter-block-header">
+	      <span>Determination</span>
+	    </div>
+	    <div id="filter-determination" style="display:grid; gap:6px;">
+	      <!-- JS will inject <label class="check-row"><input type="checkbox"> ... -->
+	    </div>
+	  </div>
+	
+	  <!-- VR TYPE FILTER -->
+	  <div class="filter-block">
+	    <div class="filter-block-header">
+	      <span>VR type</span>
+	    </div>
+	    <div id="filter-vrtype" style="display:grid; gap:6px;">
+	      <!-- JS will inject <label class="check-row"><input type="checkbox"> ... -->
+	    </div>
+	  </div>
+		
+		<!-- YEAR FILTER -->
+		<div class="filter-block">
+		  <div class="filter-block-header">
+		    <span>Event Year</span>
+		  </div>
+		  <div id="filter-year" style="display:grid; gap:6px;">
+		    <!-- JS will inject year checkboxes -->
+		  </div>
+		</div>
+	
+	  <!-- FILTER BUTTONS -->
+	  <div class="filter-block">
+	    <button id="apply-main-filters" class="btn">Apply Filters</button>
+	    <button id="clear-main-filters" class="btn secondary" style="margin-top:8px;">Clear Filters</button>
+	  </div>
+	
+	  <!-- RELATED EVENTS SEARCH -->
+	  <div class="filter-block">
+	    <div class="filter-block-header">
+	      <span>Find related events</span>
+	    </div>
+	
+	    <div class="filter-hint">
+	      Enter a Reference No. (e.g. VR8475). Results will show all other events:
+	      <br>- within 1 km radius
+	      <br>- within 14 calendar days of its Start date 
+	    </div>
+	
+	    <input id="ref-search-input" type="text" placeholder="Reference No." style="margin-bottom:8px;">
+	
+	    <button id="run-ref-search" class="btn">Run Related Search</button>
+	
+	    <div class="filter-hint" style="margin-top:12px;">
+	      Results:
+	    </div>
+	
+	    <!-- live preview table -->
+	    <div id="ref-results-table">
+	      <!-- JS fills this with a <table> that uses sticky header etc. -->
+	    </div>
+	
+	    <button id="open-ref-details" class="btn" style="margin-top:12px;">
+	      Open Full Details
+	    </button>
+	  </div>
+	
+	</div>
+
+    <!-- map display panel -->
+    <main class="map-pane" aria-label="Map display">
+      <div id="map" role="application" aria-label="Leaflet map"></div>
+    </main>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  
+  <!-- Plugins: geocoder, draw, turf, projections, CSV, heatmap, export -->
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>    
+  <!-- MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+  <!-- MarkerCluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>	
+	
+	<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+	<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+	<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+	<script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/proj4@2.9.2/dist/proj4.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/proj4leaflet@1.0.2/src/proj4leaflet.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+	<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+  <!-- my custom script for map -->
+ 
+  <script src="./main.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
