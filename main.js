@@ -219,6 +219,14 @@ function buildFeatures() {
   return features;
 }
 
+function formatAsDDMonYY(d) {
+  if (!(d instanceof Date) || isNaN(d)) return "unknown date";
+  const day = String(d.getDate()).padStart(2, "0");
+  const mon = d.toLocaleString("en-GB", { month: "short" }); // e.g., May
+  const yy  = String(d.getFullYear()).slice(-2);
+  return `${day}-${mon}-${yy}`; // 31-May-25
+}
+
 //-----------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------
 async function initDataPipeline() {
@@ -616,16 +624,17 @@ function renderRefTablePreview(mainFeature, relatedList) {
 
 function openFullDetailsModal() {
   const { mainFeature, related } = lastRefSearch;
-  if (!mainFeature) {
-    return;
-  }
+  if (!mainFeature) return;            // nothing searched yet
+  if (!related || related.length === 0) return; // no results to show
 
-  const allRows = related;
-  if (!allRows || allRows.length === 0) {
-    return;
-  }
+  // Build title: "Related Events (...) for VR#### on DD-Mon-YY"
+  const baseDate = mainFeature.firstDate || parseDateSmart(mainFeature.startDate);
+  const ref = (mainFeature.reference || "").trim();
+  const labelDate = formatAsDDMonYY(baseDate);
+  const titleText = `Related Events (14 calendar days / 1 km) for ${ref} on ${labelDate}`;
 
-  const tableRows = allRows.map(f => `
+  // Table rows for related items
+  const tableRows = related.map(f => `
     <tr>
       <td>${f.reference || ""}</td>
       <td>${f.startDate || ""} ${f.startTime || ""}</td>
@@ -644,9 +653,7 @@ function openFullDetailsModal() {
     <div id="refModalBackdrop"></div>
     <div id="refModal">
       <div class="refModalHeader">
-        <div class="refModalTitle">
-          Related Events (14 calendar days / 1 km)
-        </div>
+        <div class="refModalTitle">${titleText}</div>
         <button id="refModalClose" class="refModalCloseBtn">Close</button>
       </div>
 
@@ -674,15 +681,14 @@ function openFullDetailsModal() {
     </div>
   `;
 
-  // to close any existing modal instance first
+  // close any existing instance 
   closeFullDetailsModal();
-
   const wrapper = document.createElement("div");
   wrapper.setAttribute("id", "refModalWrapper");
   wrapper.innerHTML = modalHtml;
   document.body.appendChild(wrapper);
 
-  // wire-up for the close behavior
+  // wire-up close behavior
   document.getElementById("refModalClose").addEventListener("click", closeFullDetailsModal);
   document.getElementById("refModalBackdrop").addEventListener("click", closeFullDetailsModal);
 }
@@ -694,10 +700,28 @@ function closeFullDetailsModal() {
 
 function hookRefSearchButtons(allFeats) {
   const runBtn = document.getElementById("run-ref-search");
-  runBtn.addEventListener("click", () => runReferenceSearch(allFeats));
-
   const openBtn = document.getElementById("open-ref-details");
-  openBtn.addEventListener("click", () => openFullDetailsModal());
+  const refInput = document.getElementById("ref-search-input");
+
+  // Click on "Run Related Search" button
+  if (runBtn) {
+    runBtn.addEventListener("click", () => runReferenceSearch(allFeats));
+  }
+
+  // Click on "Open Full Details" button
+  if (openBtn) {
+    openBtn.addEventListener("click", () => openFullDetailsModal());
+  }
+
+  // Press Enter while typing in the Reference No. box
+  if (refInput) {
+    refInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();          // don't submit / beep
+        runReferenceSearch(allFeats);
+      }
+    });
+  }
 }
 
 async function initDataPipeline() {
