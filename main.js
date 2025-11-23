@@ -176,19 +176,23 @@ function normalizeRow(row) {
 
   const yearSet = new Set();
   const rawYear = row["Year"];
+  let yearValue = null;
+
   if (rawYear && /^\d{4}$/.test(String(rawYear).trim())) {
-    yearSet.add(parseInt(String(rawYear).trim(), 10));
+    yearValue = parseInt(String(rawYear).trim(), 10);
+    yearSet.add(yearValue);
   }
-  allDates.forEach(d => yearSet.add(d.getFullYear()));
-  const years = Array.from(yearSet).filter(y => Number.isInteger(y));
+
+  // `years` is kept for compatibility, but is now only based on the Year column
+  const years = Array.from(yearSet);
 
   return {
     lat, lng,
     easting, northing,
 
     reference: row["Reference No."],
-    year: row["Year"],
-    years, 
+    year: yearValue,      // numeric year from the "Year" column
+    years,                // array containing that same year (or empty if missing)
     applicant: row["Applicant"],
     eventLocation: row["Event Location"],
     description: row["Event Description"],
