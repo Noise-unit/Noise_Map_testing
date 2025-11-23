@@ -174,29 +174,54 @@ function normalizeRow(row) {
     ? new Date(Math.min(...allDates.map(d => d.getTime())))
     : (singleStart || null);
 
-  const yearSet = new Set();
-  const rawYear = row["Year"];
+  // === Derive event year from "Start date" ===
+  // 1) Try a 4-digit year at the end (e.g. "01/03/2025", "Jan 2026")
+  // 2) If not found, try a 2-digit year at the end and map to 2000–2099
+  const rawStartStr = (row["Start date"] ?? "").toString().trim();
   let yearValue = null;
 
-  if (rawYear && /^\d{4}$/.test(String(rawYear).trim())) {
-    yearValue = parseInt(String(rawYear).trim(), 10);
-    yearSet.add(yearValue);
+  if (rawStartStr) {
+    const fourDigitMatch = rawStartStr.match(/(\d{4})\s*$/);
+    if (fourDigitMatch) {
+      const y = parseInt(fourDigitMatch[1], 10);
+      if (Number.isInteger(y)) {
+        yearValue = y;
+      }
+    } else {
+      const twoDigitMatch = rawStartStr.match(/(\d{2})\s*$/);
+      if (twoDigitMatch) {
+        const yy = parseInt(twoDigitMatch[1], 10);
+        if (Number.isInteger(yy)) {
+          // Assumption: all events are in 2000–2099
+          // "25" => 2025, "06" => 2006, etc.
+          yearValue = 2000 + yy;
+        }
+      }
+    }
   }
 
-  // `years` is kept for compatibility, but is now only based on the Year column
-  const years = Array.from(yearSet);
+  // Fallback: if we still don't have a year, use the first parsed start date
+  if (!yearValue && startDates.length > 0) {
+    const y = startDates[0].getFullYear();
+    if (Number.isInteger(y)) {
+      yearValue = y;
+    }
+  }
+
+  const years = yearValue ? [yearValue] : [];
 
   return {
     lat, lng,
     easting, northing,
 
     reference: row["Reference No."],
-    year: yearValue,      // numeric year from the "Year" column
-    years,                // array containing that same year (or empty if missing)
+    year: yearValue,       // numeric year derived from Start date
+    years,                 // kept for compatibility (array with that year)
+
     applicant: row["Applicant"],
     eventLocation: row["Event Location"],
     description: row["Event Description"],
-    startDate: row["Start date"], 
+    startDate: row["Start date"],
     endDate: row["End date"],
     startTime: row["Start time"],
     endTime: row["End time"],
@@ -210,7 +235,6 @@ function normalizeRow(row) {
     firstDate
   };
 }
-
 
 function buildFeatures() {
   const features = [];
