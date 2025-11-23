@@ -391,26 +391,26 @@ function parseDateSmart(str) {
   return isNaN(fallback.getTime()) ? null : fallback;
 }
 
-//Checkbox code on the sidepanel for filters
 function buildFilterCheckboxes(features) {
   const determinations = [...new Set(
     features.map(f => (f.determination || "").trim()).filter(x => x !== "")
-  )].sort((a,b)=>a.localeCompare(b));
+  )].sort((a, b) => a.localeCompare(b));
 
   const vrtypes = [...new Set(
     features.map(f => (f.vrType || "").trim()).filter(x => x !== "")
-  )].sort((a,b)=>a.localeCompare(b));
+  )].sort((a, b) => a.localeCompare(b));
 
+  // Years derived strictly from Start date (via f.year)
   const yearVals = new Set();
   features.forEach(f => {
-    if (Array.isArray(f.years)) f.years.forEach(y => Number.isInteger(y) && yearVals.add(y));
-    const raw = (f.year ?? "").toString().trim();
-    if (/^\d{4}$/.test(raw)) yearVals.add(parseInt(raw, 10));
+    if (Number.isInteger(f.year)) {
+      yearVals.add(f.year);
+    }
   });
-  const yearsList = Array.from(yearVals).sort((a,b)=>b-a); // show newest first
+  const yearsList = Array.from(yearVals).sort((a, b) => b - a); // newest first
 
-  const detContainer = document.getElementById("filter-determination");
-  const vrContainer  = document.getElementById("filter-vrtype");
+  const detContainer  = document.getElementById("filter-determination");
+  const vrContainer   = document.getElementById("filter-vrtype");
   const yearContainer = document.getElementById("filter-year");
 
   detContainer.innerHTML = "";
@@ -459,7 +459,7 @@ function getFilteredFeatures(allFeats) {
   ).filter(cb => cb.checked)
    .map(cb => cb.getAttribute("data-vrtype"));
 
-  // NEW: years
+  // Years (derived from Start date, stored in f.year)
   const yearChecked = Array.from(
     document.querySelectorAll('#filter-year input[type=checkbox]')
   ).filter(cb => cb.checked)
@@ -480,9 +480,7 @@ function getFilteredFeatures(allFeats) {
           return true;
         });
         if (!inWindow) return false;
-      }
-
-      else {
+      } else {
         return false;
       }
     }
@@ -500,9 +498,10 @@ function getFilteredFeatures(allFeats) {
     }
 
     if (yearChecked.length > 0) {
-      const rowYears = Array.isArray(f.years) ? f.years : [];
-      const hasYear = rowYears.some(y => yearChecked.includes(y));
-      if (!hasYear) return false;
+      // Only keep features whose derived year matches a selected year
+      if (!Number.isInteger(f.year) || !yearChecked.includes(f.year)) {
+        return false;
+      }
     }
 
     return true;
