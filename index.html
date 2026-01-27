@@ -192,9 +192,10 @@
               </ul>
 
               <div class="overview-note">
-                <p style="line-height: 3;"><b>Note:</b> This map contains <u>noise variation data</u></p>
+                <p><b>Note:</b> This map contains <u>noise variation data</u></p>
+                <p>Press the 'F5' Key if Data does not automatically refresh</u></p>
                 <br>
-                <p style="line-height: 1;"><b>Event Variations:</b><a id="overview-noise-variations-link" href="https://docs.google.com/spreadsheets/d/1ro2RikBI665e5VLKk8MPUylEkAEJIhfKeBo46AGimLo/edit?usp=drive_link" target="_blank" rel="noopener">
+                <p style="line-height: 2;"><b>Event Variations:</b><a id="overview-noise-variations-link" href="https://docs.google.com/spreadsheets/d/1ro2RikBI665e5VLKk8MPUylEkAEJIhfKeBo46AGimLo/edit?usp=drive_link" target="_blank" rel="noopener">
                       Event Variations
                     </a></p>
 
@@ -224,6 +225,17 @@
             </div>
 
             <div
+              id="panel-proximity"
+              class="tool-panel-section"
+              role="region"
+              aria-label="Proximity panel"
+              hidden
+            >
+              <h2>Proximity</h2>
+              <div id="proximity-root" class="proximity-root"></div>
+            </div>
+
+            <div
               id="panel-filters"
               class="tool-panel-section"
               role="region"
@@ -232,7 +244,6 @@
             >
               <h2>Filters</h2>
 
-              <!-- Filters Root -->
               <div id="filters-root" class="filters-root"></div>
             </div>
   
@@ -389,12 +400,11 @@
     <script src="scripts/geocoder.js"></script>
     <script src="scripts/repoLayers.js"></script>
     <script src="scripts/layerStyle.js"></script>
-    <script src="scripts/overview.js"></script> 
     <script src="scripts/layers.js"></script>
     <script src="scripts/appdata.js"></script>
     <script src="scripts/drawTools.js"></script>
     <script src="scripts/filtersPanel.js"></script>
-    <script src="scripts/proximity.js"></script>  
+    <script src="scripts/proximityPanel.js"></script>  
     <script src="scripts/analysisPanel.js"></script>  
 
 

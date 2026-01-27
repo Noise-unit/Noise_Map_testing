@@ -747,7 +747,7 @@ console.log("✅ filtersPanel.js loaded");
       el(
         "div",
         "filters-help",
-        `<div><strong>Dataset Filters</strong></div>
+        `<div class="filter-header"><strong>Dataset Filters</strong></div>
          <div>Filters show ONLY for datasets toggled <b>ON</b>.</div>`
       )
     );
@@ -877,6 +877,9 @@ console.log("✅ filtersPanel.js loaded");
           </div>
 
           <hr class="filter-divider" />
+          <hr class="filter-divider" />
+          <div class="filter-header"> <b>Parameter Filters</b></div>
+       
 
           <div class="filter-subtitle">Year</div>
 
@@ -949,32 +952,6 @@ console.log("✅ filtersPanel.js loaded");
           </div>
 
           <hr class="filter-divider" />
-
-          <div class="filter-subtitle">Proximity Events</div>
-
-          <div class="filter-row">
-            <label>Reference No. of Interest</label>
-            <input class="nearby-ref" type="text" placeholder="e.g. 8715 or VR8715" />
-          </div>
-
-          <div class="filter-row">
-            <label>Radius (metres)</label>
-            <input class="nearby-radius" type="number" min="0" step="50" placeholder="e.g. 1000" />
-          </div>
-
-          <div class="filter-row">
-            <label>Period (± days)</label>
-            <input class="nearby-days" type="number" min="0" step="1" placeholder="e.g. 14" />
-          </div>
-
-          <div class="filter-row">
-            <label>Proximity Date Field</label>
-            <select class="nearby-date-field"></select>
-          </div>
-
-          <div class="filters-note">
-            Finds applications within the radius AND within ± days of the selected reference application's date(s).
-          </div>
 
           <hr class="filter-divider" />
 
@@ -1130,20 +1107,23 @@ console.log("✅ filtersPanel.js loaded");
       dateTo.addEventListener("change", () => (state.dateTo = dateTo.value));
 
       // Proximity date field selector
-      nearbyDateFieldSel.innerHTML =
-        `<option value="">(select date field)</option>` +
-        dateFields.map((f) => `<option value="${escapeHTML(f)}">${escapeHTML(f)}</option>`).join("");
-      nearbyDateFieldSel.value = state.nearbyDateField || "";
+      if (nearbyRefInput && nearbyRadiusInput && nearbyDaysInput && nearbyDateFieldSel) {
+        // Proximity date field selector
+        nearbyDateFieldSel.innerHTML =
+          `<option value="">(select date field)</option>` +
+          dateFields.map((f) => `<option value="${escapeHTML(f)}">${escapeHTML(f)}</option>`).join("");
+        nearbyDateFieldSel.value = state.nearbyDateField || "";
 
-      nearbyRefInput.value = state.nearbyRef || "";
-      nearbyRadiusInput.value = String(state.nearbyRadius ?? 1000);
-      nearbyDaysInput.value = String(state.nearbyDays ?? 14);
+        nearbyRefInput.value = state.nearbyRef || "";
+        nearbyRadiusInput.value = String(state.nearbyRadius ?? 1000);
+        nearbyDaysInput.value = String(state.nearbyDays ?? 14);
 
-      nearbyRefInput.addEventListener("input", () => (state.nearbyRef = nearbyRefInput.value));
-      nearbyRadiusInput.addEventListener("input", () => (state.nearbyRadius = Number(nearbyRadiusInput.value || 0)));
-      nearbyDaysInput.addEventListener("input", () => (state.nearbyDays = Number(nearbyDaysInput.value || 0)));
-      nearbyDateFieldSel.addEventListener("change", () => (state.nearbyDateField = nearbyDateFieldSel.value));
-
+        nearbyRefInput.addEventListener("input", () => (state.nearbyRef = nearbyRefInput.value));
+        nearbyRadiusInput.addEventListener("input", () => (state.nearbyRadius = Number(nearbyRadiusInput.value || 0)));
+        nearbyDaysInput.addEventListener("input", () => (state.nearbyDays = Number(nearbyDaysInput.value || 0)));
+        nearbyDateFieldSel.addEventListener("change", () => (state.nearbyDateField = nearbyDateFieldSel.value));
+      }
+      
       // Status fields
       statusFieldSel.innerHTML =
         `<option value="">(no status filter)</option>` +
@@ -1557,6 +1537,44 @@ console.log("✅ filtersPanel.js loaded");
       });
     }
   }
+
+    // ----------------------------------------------------
+    // Public API (used by Proximity panel)
+    // ----------------------------------------------------
+    window.FiltersPanelAPI = window.FiltersPanelAPI || {};
+
+    /**
+     * Open the Results modal for a dataset id using the current visible rows and last applied filter spec.
+     */
+    window.FiltersPanelAPI.showResults = function (datasetId) {
+      try {
+        if (!window.AppDataManager) {
+          console.warn("FiltersPanelAPI.showResults: AppDataManager not ready");
+          return;
+        }
+
+        // Ensure the filters panel DOM + state exist
+        buildFiltersPanel(window.AppDataManager);
+
+        const ds = window.AppDataManager.getDataset(datasetId);
+        if (!ds || !ds.config) {
+          alert("Dataset not found for results.");
+          return;
+        }
+
+        const cfg = ds.config;
+        const state = (window.FiltersPanelState && window.FiltersPanelState[datasetId]) || {};
+
+        const visibleRows = window.AppDataManager.getDatasetVisibleRows(datasetId);
+        const spec = state.lastFilterSpec || null;
+        const summaryText = buildFilterSummaryText(spec);
+
+        openResultsModal(cfg.name, summaryText, visibleRows, spec);
+      } catch (e) {
+        console.error("FiltersPanelAPI.showResults failed:", e);
+        alert("Could not open results. Check console for details.");
+      }
+    };
 
   // ----------------------------------------------------
   // Init

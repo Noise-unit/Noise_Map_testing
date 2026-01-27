@@ -20,7 +20,7 @@ const APPDATA_DATASETS = [
     id: "event_variations",
     name: "Event Variations",
     source: "Google Sheets",
-    url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vST9jFDozBD98GDTjeMAI5g_TL2-3YgPLjlvo4FhmtlV7GsnIrRayqJYuG8kOk1ZA3czA9qrfoZcomy/pub?gid=0&single=true&output=csv",
+    url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBI-NgdiQKH_HxbEl9ej74hF79sXYflXnSmgi2E9vR27v06cC2WjPqv_Ofkm9Faj9KeqGLM_eijfik/pub?gid=0&single=true&output=csv",
     geometry: "utm_points",
     eastingField: "Easting",
     northingField: "Northing",
@@ -165,14 +165,23 @@ function buildPopupHTML(datasetName, row) {
 
 function createDivIcon(color, opacity = 1) {
   const safeOpacity = Math.max(0, Math.min(1, Number(opacity) || 1));
+  const fill = escapeHTML(color);
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 22s7-5.3 7-12a7 7 0 1 0-14 0c0 6.7 7 12 7 12z"
+            fill="${fill}" fill-opacity="${safeOpacity}"
+            stroke="rgba(255,255,255,0.95)" stroke-width="1.6" />
+      <circle cx="12" cy="10" r="2.6" fill="rgba(255,255,255,0.95)" fill-opacity="${Math.max(0.35, safeOpacity)}"/>
+    </svg>
+  `.trim();
+
   return L.divIcon({
     className: "",
-    html: `<div class="ema-marker" style="background:${escapeHTML(
-      color
-    )};opacity:${safeOpacity};"></div>`,
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
-    popupAnchor: [0, -8],
+    html: svg,
+    iconSize: [28, 28],
+    iconAnchor: [14, 27],
+    popupAnchor: [0, -24],
   });
 }
 
@@ -306,7 +315,7 @@ class AppDataManager {
       ds.cluster = L.markerClusterGroup({
         showCoverageOnHover: false,
         spiderfyOnMaxZoom: true,
-        disableClusteringAtZoom: 16,
+        disableClusteringAtZoom: 23,
       });
 
       for (const m of markers) {
@@ -852,3 +861,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
   console.log("✅ Application Data panel initialized.");
 });
+
