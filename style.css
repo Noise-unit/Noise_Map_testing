@@ -444,9 +444,11 @@ select:focus,
 }
 
 .ema-popup-v2 .ema-popup__title {
-  font-weight: 900;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 12px;
   line-height: 1.1;
+  color: var(--muted-text);
+   
 }
 
 .ema-popup-v2 .ema-popup__title--ref {
