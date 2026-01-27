@@ -476,7 +476,7 @@ select:focus,
   white-space: nowrap;
 }
 
-/* optional: green-ish badge for "Issued" */
+/* green-ish badge for "Issued" */
 .ema-popup-v2 .ema-popup__badge.is-issued {
   background: rgba(34, 197, 94, 0.14);
   border-color: rgba(34, 197, 94, 0.35);
@@ -490,6 +490,7 @@ select:focus,
   gap: 10px;
   max-height: 320px;
   overflow: auto;
+  color: var(--muted-text);
 }
 
 /* Key/value rows */
