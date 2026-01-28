@@ -401,6 +401,15 @@ class AppDataManager {
         disableClusteringAtZoom: 23,
       });
 
+      ds.cluster.on("clusterclick", (e) => {
+        const z = this.map.getZoom();
+        const zMax = this.map.getMaxZoom();
+
+        if (z >= zMax) {
+          e.layer.spiderfy();
+        }
+      });
+
       for (const m of markers) {
         ds.cluster.addLayer(m);
       }
