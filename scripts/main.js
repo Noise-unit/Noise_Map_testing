@@ -1,6 +1,7 @@
 // Initialize the Leaflet noisemap
 const map = L.map('map', {
   zoomControl: true,
+  maxZoom: 20,
 });
 
 // === Basemaps (openstreet map and Google - the const names were left as esriStreets and esriImagery from a previous version of the code)===
@@ -60,4 +61,5 @@ document.addEventListener("DOMContentLoaded", () => {
     e.stopPropagation();
     toggleBasemap(basemapBtn);
   });
+
 });
