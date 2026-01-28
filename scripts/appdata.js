@@ -186,18 +186,21 @@ function buildPopupHTML(datasetName, row) {
     detNorm.includes("cancel") ? "is-cancelled" :
     "";
 
-  const subtitleBits = [];
-  if (year) subtitleBits.push(`Year: ${escapeHTML(year)}`);
-  if (host) subtitleBits.push(`Host: ${escapeHTML(host)}`);
-  const subtitle = subtitleBits.join(" • ");
+// Header lines
+const yearLine = year ? `Year: ${escapeHTML(year)}` : "";
+const hostLine = host ? `Host: ${escapeHTML(host)}` : "";
+const determinationDateLine = determinationDate
+  ? `Determination Date: ${escapeHTML(determinationDate)}`
+  : "";
 
-  const startLine = `Start: ${
-    startDate ? escapeHTML(startDate) : "—"
-  }${startTime ? " " + escapeHTML(startTime) : ""}`;
+// Body lines
+const eventStartLine = `${
+  startDate ? escapeHTML(startDate) : "—"
+}${startTime ? " " + escapeHTML(startTime) : ""}`;
 
-  const endLine = `End: ${
-    endDate ? escapeHTML(endDate) : "—"
-  }${endTime ? " " + escapeHTML(endTime) : ""}`;
+const eventEndLine = `${
+  endDate ? escapeHTML(endDate) : "—"
+}${endTime ? " " + escapeHTML(endTime) : ""}`;
 
   const kv = (k, v) => `
     <div class="ema-kv">
@@ -218,9 +221,9 @@ function buildPopupHTML(datasetName, row) {
           <div class="ema-popup__titlewrap">
             <div class="ema-popup__title">${datasetTitle}</div>
             ${vrRef ? `<div class="ema-popup__title ema-popup__title--ref">${vrRef}</div>` : ``}
-            ${subtitle ? `<div class="ema-popup__subtitle">${subtitle}</div>` : ``}
-            ${startLine ? `<div class="ema-popup__subtitle">${startLine}</div>` : ``}
-            ${endLine ? `<div class="ema-popup__subtitle">${endLine}</div>` : ``}
+            ${yearLine ? `<div class="ema-popup__subtitle">${yearLine}</div>` : ``}
+            ${hostLine ? `<div class="ema-popup__subtitle">${hostLine}</div>` : ``}
+            ${determinationDateLine ? `<div class="ema-popup__subtitle">${determinationDateLine}</div>` : ``}
           </div>
 
           <div class="ema-popup__badge ${badgeClass}">${escapeHTML(badgeText)}</div>
@@ -230,7 +233,8 @@ function buildPopupHTML(datasetName, row) {
       <div class="ema-popup__body">
         ${kv("Applicant", applicant)}
         ${kv("VR type", vrType)}
-        ${kv("Determination Date", determinationDate)}
+        ${kv("Event Start", eventStartLine)}
+        ${kv("Event End", eventEndLine)}
         ${kv("Event Location", eventLocation)}
 
         <div class="ema-section-title">Event Description</div>
