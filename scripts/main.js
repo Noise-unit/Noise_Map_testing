@@ -1,12 +1,14 @@
 // Initialize the Leaflet noisemap
 const map = L.map('map', {
   zoomControl: true,
-  maxZoom: 20,
+  maxZoom: 20, 
 });
+
 
 // === Basemaps (openstreet map and Google - the const names were left as esriStreets and esriImagery from a previous version of the code)===
 const esriStreets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 18, //above this number causes render issues with the esristreet
+  maxZoom: 20, 
+  maxNativeZoom: 18, 
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
@@ -61,5 +63,4 @@ document.addEventListener("DOMContentLoaded", () => {
     e.stopPropagation();
     toggleBasemap(basemapBtn);
   });
-
 });
