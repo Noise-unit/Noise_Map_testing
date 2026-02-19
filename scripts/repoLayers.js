@@ -92,6 +92,18 @@ window.GEOJSON_LAYERS_CONFIG = [
     type: "poi",
   },
   {
+    id: "trinidad_health_centres",
+    name: "Trinidad Health Centres",
+    url: "https://raw.githubusercontent.com/Noise-unit/GeojsonLayers/refs/heads/main/TrinidadHealthCentres.geojson",
+    type: "poi",
+  },
+  {
+    id: "tobago_health_centres",
+    name: "Tobago Health Centres",
+    url: "https://raw.githubusercontent.com/Noise-unit/GeojsonLayers/refs/heads/main/TobagoHealthCentres.geojson",
+    type: "poi",
+  },
+  {
     id: "trinidad_hospitals",
     name: "Trinidad Hospitals",
     url: "https://raw.githubusercontent.com/Noise-unit/GeojsonLayers/refs/heads/main/TrinidadHospitals.geojson",
@@ -149,3 +161,4 @@ window.REPO_LAYER_GROUPS = [
   { id: "policy", title: "Policy" },
   { id: "poi", title: "Points of Interest" },
 ];
+
