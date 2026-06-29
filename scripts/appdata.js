@@ -740,7 +740,7 @@ function buildAppDataPanel(manager) {
 
     const status = document.createElement("span");
     status.className = "dataset-status";
-    status.textContent = "Off";
+    status.textContent = "On";
 
     const toggleWrap = document.createElement("label");
     toggleWrap.className = "mini-toggle";
