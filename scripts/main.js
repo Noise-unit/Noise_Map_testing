@@ -7,9 +7,10 @@ const map = L.map('map', {
 
 // === Basemaps (openstreet map and Google - the const names were left as esriStreets and esriImagery from a previous version of the code)===
 const esriStreets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 20, 
-  maxNativeZoom: 18, 
-  attribution: '&copy; OpenStreetMap contributors'
+  maxZoom: 20,
+  maxNativeZoom: 18,
+  attribution: '&copy; OpenStreetMap contributors',
+  className: "osm-basemap-tiles"
 }).addTo(map);
 
   const esriImagery = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
