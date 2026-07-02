@@ -92,6 +92,117 @@ console.log("✅ filtersPanel.js loaded");
     return false;
   }
 
+  function showFindEntryPulse(marker) {
+    if (!marker) return;
+
+    const iconEl =
+      typeof marker.getElement === "function"
+        ? marker.getElement()
+        : marker._icon;
+
+    if (iconEl) {
+      iconEl.style.position = "relative";
+      iconEl.style.overflow = "visible";
+
+      const oldPulse = iconEl.querySelector(".find-entry-icon-pulse");
+      if (oldPulse) oldPulse.remove();
+
+      const pulse = document.createElement("span");
+      pulse.className = "find-entry-icon-pulse";
+      iconEl.appendChild(pulse);
+
+      setTimeout(() => {
+        if (pulse.parentNode) {
+          pulse.parentNode.removeChild(pulse);
+        }
+      }, 1100);
+
+      return;
+    }
+
+    // Fallback: if the marker icon is not available, pulse at the map coordinate.
+    if (typeof L !== "undefined" && typeof map !== "undefined") {
+      const latlng = marker.getLatLng();
+
+      const pulse = L.circleMarker(latlng, {
+        radius: 6,
+        color: "#dc2626",
+        weight: 3,
+        opacity: 0.95,
+        fillColor: "#dc2626",
+        fillOpacity: 0.2,
+        interactive: false,
+        pane: "markerPane",
+      }).addTo(map);
+
+      const duration = 1000;
+      const start = performance.now();
+
+      function animatePulse(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const radius = 6 + progress * 28;
+        const opacity = 0.95 * (1 - progress);
+        const fillOpacity = 0.2 * (1 - progress);
+
+        pulse.setRadius(radius);
+        pulse.setStyle({
+          opacity: opacity,
+          fillOpacity: fillOpacity,
+        });
+
+        if (progress < 1) {
+          requestAnimationFrame(animatePulse);
+        } else if (map.hasLayer(pulse)) {
+          map.removeLayer(pulse);
+        }
+      }
+
+      requestAnimationFrame(animatePulse);
+    }
+  }
+
+function getVisibleClusterForMarker(clusterGroup, marker) {
+  if (!clusterGroup || !marker) return null;
+
+  // First try the official MarkerCluster method
+  if (typeof clusterGroup.getVisibleParent === "function") {
+    const visibleParent = clusterGroup.getVisibleParent(marker);
+
+    if (
+      visibleParent &&
+      visibleParent !== marker &&
+      typeof visibleParent.spiderfy === "function"
+    ) {
+      return visibleParent;
+    }
+  }
+
+  // Fallback: search visible cluster icons currently drawn on the map.
+  // This uses Leaflet MarkerCluster internals, but it is useful for
+  // same-coordinate points that stay clustered at max zoom.
+  let foundCluster = null;
+
+  if (clusterGroup._featureGroup && typeof clusterGroup._featureGroup.eachLayer === "function") {
+    clusterGroup._featureGroup.eachLayer((layer) => {
+      if (foundCluster) return;
+
+      if (
+        layer &&
+        typeof layer.getAllChildMarkers === "function" &&
+        typeof layer.spiderfy === "function"
+      ) {
+        const children = layer.getAllChildMarkers();
+
+        if (children && children.includes(marker)) {
+          foundCluster = layer;
+        }
+      }
+    });
+  }
+
+  return foundCluster;
+}
+
   // ----------------------------------------------------
   // Filter summary helpers (for table title/subtitle + PDF)
   // ----------------------------------------------------
@@ -1071,6 +1182,7 @@ console.log("✅ filtersPanel.js loaded");
       refFindBtn.addEventListener("click", () => {
         const refField = refFieldSel.value;
         const query = String(refSearch.value || "").trim();
+
         if (!refField || !query) {
           alert("Select a Reference Field and enter a value to search.");
           return;
@@ -1087,9 +1199,65 @@ console.log("✅ filtersPanel.js loaded");
         }
 
         const ll = target.getLatLng();
-        if (ll) {
-          map.setView(ll, 16, { animate: true });
+        if (!ll) return;
+
+        const mapMaxZoom = map.getMaxZoom();
+        const safeMaxZoom = Number.isFinite(mapMaxZoom) ? mapMaxZoom : 20;
+
+        // Same-coordinate points need the map to zoom all the way in
+        // before forcing the visible cluster to spiderfy.
+        const targetZoom = safeMaxZoom;
+
+        function openAndPulseTarget() {
           target.openPopup();
+          showFindEntryPulse(target);
+        }
+
+        function spiderfyIfClusteredThenHighlight() {
+          if (!ds.cluster) {
+            openAndPulseTarget();
+            return;
+          }
+
+          const visibleCluster = getVisibleClusterForMarker(ds.cluster, target);
+
+          if (visibleCluster && typeof visibleCluster.spiderfy === "function") {
+            visibleCluster.spiderfy();
+
+            // Wait for spiderfy animation/icons to finish drawing
+            setTimeout(() => {
+              openAndPulseTarget();
+            }, 450);
+
+            return;
+          }
+
+          openAndPulseTarget();
+        }
+
+        map.flyTo(ll, targetZoom, {
+          animate: true,
+          duration: 0.8,
+        });
+
+        // Use both moveend and timeout.
+        // moveend may not fire if the map is already at the searched point/zoom.
+        let handled = false;
+
+        function handleAfterZoom() {
+          if (handled) return;
+          handled = true;
+          spiderfyIfClusteredThenHighlight();
+        }
+
+        map.once("moveend", handleAfterZoom);
+        setTimeout(handleAfterZoom, 1000);
+      });
+
+      refSearch.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          refFindBtn.click();
         }
       });
 

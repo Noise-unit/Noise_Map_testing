@@ -268,6 +268,33 @@ function createDivIcon(color, opacity = 1) {
   });
 }
 
+function createClusterIcon(cluster, opacity = 1) {
+  const count = cluster.getChildCount();
+  const safeOpacity = Math.max(0, Math.min(1, Number(opacity)));
+
+  let sizeClass = "small";
+  let iconSize = 40;
+
+  if (count >= 100) {
+    sizeClass = "large";
+    iconSize = 50;
+  } else if (count >= 10) {
+    sizeClass = "medium";
+    iconSize = 46;
+  }
+
+  return L.divIcon({
+    html: `
+      <div class="appdata-cluster-circle appdata-cluster-${sizeClass}"
+           style="opacity: ${safeOpacity};">
+        <span>${count}</span>
+      </div>
+    `,
+    className: "appdata-cluster-icon",
+    iconSize: L.point(iconSize, iconSize),
+  });
+}
+
 // Palette for category coloring 
 // (up to 10 unique values for deciding on how the data is displayed)
 const CATEGORY_PALETTE = [
@@ -334,7 +361,7 @@ class AppDataManager {
 
       this.datasets.set(config.id, {
         config: normalized,
-        active: false,
+        active: true,
         loaded: false,
         loading: false,
         error: null,
@@ -398,7 +425,12 @@ class AppDataManager {
       ds.cluster = L.markerClusterGroup({
         showCoverageOnHover: false,
         spiderfyOnMaxZoom: true,
-        disableClusteringAtZoom: 23,
+        disableClusteringAtZoom: 21,
+        zoomToBoundsOnClick: true,
+
+        iconCreateFunction: (cluster) => {
+          return createClusterIcon(cluster, ds.opacity);
+        },
       });
 
       ds.cluster.on("clusterclick", (e) => {
@@ -458,15 +490,31 @@ class AppDataManager {
     const val = Math.max(0, Math.min(1, Number(opacity)));
     ds.opacity = val;
 
-    // Apply opacity to markers (works for DivIcon markers)
+    // Apply opacity to individual point markers
     ds.markers.forEach((m) => {
+      const row = m.__appdataRow;
+      let color = ds.config.defaultColor;
+
+      if (ds.categoryField) {
+        const raw = row?.[ds.categoryField];
+        const v = String(raw ?? "").trim();
+
+        if (v && ds.categoryColorMap.has(v)) {
+          color = ds.categoryColorMap.get(v);
+        }
+      }
+
+      m.setIcon(createDivIcon(color, val));
+
       if (typeof m.setOpacity === "function") {
         m.setOpacity(val);
-      } else {
-
-        m.setIcon(createDivIcon(ds.config.defaultColor, val));
       }
     });
+
+    // Refresh clustered icons so the opacity also applies when zoomed out
+    if (ds.cluster && typeof ds.cluster.refreshClusters === "function") {
+      ds.cluster.refreshClusters();
+    }
   }
 
   setCategoryField(id, fieldOrNull) {
@@ -691,7 +739,10 @@ class AppDataManager {
 // ----------------------------------------------------
 
 function buildAppDataPanel(manager) {
-  const root = document.getElementById("appdata-root");
+  const root =
+    document.querySelector("#panel-settings #appdata-root") ||
+    document.getElementById("appdata-root");
+
   if (!root) {
     console.warn("❌ appdata.js: #appdata-root not found in HTML");
     return null;
@@ -748,6 +799,7 @@ function buildAppDataPanel(manager) {
 
     const toggle = document.createElement("input");
     toggle.type = "checkbox";
+    toggle.checked = !!ds.active;
 
     toggleWrap.appendChild(toggle);
 
@@ -946,12 +998,25 @@ document.addEventListener("DOMContentLoaded", () => {
     return manager.loadDataset(ds.config.id);
   });
 
-  Promise.allSettled(preloadPromises).then(() => {
-    // Refresh counts EVEN WHEN OFF
-    if (ui) ui.refreshAll();
-    console.log("✅ AppData preload finished + card counts refreshed");
-  });
+Promise.allSettled(preloadPromises).then(async () => {
 
-  console.log("✅ Application Data panel initialized.");
+  // Turn on any datasets that are marked as active by default
+  const datasets = manager.getAllDatasets();
+
+  for (const ds of datasets) {
+    if (ds.active) {
+      await manager.setDatasetActive(ds.config.id, true);
+    }
+  }
+
+  // Refresh the UI
+  if (ui) {
+    ui.refreshAll();
+  }
+
+  console.log("✅ AppData preload finished + default datasets activated");
+
+});
+
 });
 
