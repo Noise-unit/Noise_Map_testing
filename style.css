@@ -1012,6 +1012,38 @@ body.toolpanel-collapsed #sidebar {
   border: 1px solid var(--border-weak);
 }
 
+.settings-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted-text);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 10px;
+  margin-bottom: 2px;
+}
+
+.settings-appdata-root .appdata-help {
+  display: none;
+}
+
+.settings-appdata-root .dataset-card {
+  background: var(--control-bg-2);
+  border: 1px solid var(--border-weak);
+  box-shadow: none;
+}
+
+.settings-appdata-root .dataset-card-header {
+  margin-bottom: 8px;
+}
+
+.settings-appdata-root .dataset-title strong {
+  font-size: 13px;
+}
+
+.settings-appdata-root .dataset-toggle-row {
+  margin-bottom: 10px;
+}
+
 .settings-text {
   display: flex;
   flex-direction: column;
@@ -2574,4 +2606,83 @@ body[data-theme="dark"] {
   background: rgba(239, 68, 68, 0.12);
   border-color: rgba(239, 68, 68, 0.35);
   color: color-mix(in srgb, #dc2626 70%, var(--text));
+}
+
+.appdata-cluster-icon {
+  background: transparent;
+  border: none;
+}
+
+body[data-theme="light"] {
+  --cluster-text: #ffffff;
+  --cluster-border: rgba(255, 255, 255, 0.9);
+}
+
+body[data-theme="dark"] {
+  --cluster-text: #000000;
+  --cluster-border: rgba(0, 0, 0, 0.9);
+}
+
+.appdata-cluster-circle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px solid var(--cluster-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cluster-text);
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.appdata-cluster-circle span {
+  line-height: 1;
+}
+
+.appdata-cluster-small {
+  background: rgba(53, 94, 160, 0.85);
+}
+
+.appdata-cluster-medium {
+  background: rgba(146, 104, 32, 0.88);
+}
+
+.appdata-cluster-large {
+  background: rgba(160, 49, 49, 0.9);
+}
+
+/* Find Entry Marker Pulse */
+
+.find-entry-icon-pulse {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  border: 3px solid #dc2626;
+  border-radius: 999px;
+  transform: translate(-50%, -50%) scale(0.45);
+  opacity: 0.95;
+  pointer-events: none;
+  z-index: 9999;
+  animation: findEntryIconPulse 1.1s ease-out forwards;
+}
+
+@keyframes findEntryIconPulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.45);
+    opacity: 0.95;
+  }
+
+  60% {
+    opacity: 0.65;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(2.1);
+    opacity: 0;
+  }
 }
