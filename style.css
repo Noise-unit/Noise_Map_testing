@@ -2686,3 +2686,13 @@ body[data-theme="dark"] {
     opacity: 0;
   }
 }
+
+/* Dark Mode OpenStreetMap Basemap */
+
+body[data-theme="dark"] .osm-basemap-tiles {
+  filter: brightness(0.85) invert(1) contrast(1.2) hue-rotate(180deg) saturate(0.75);
+}
+
+body[data-theme="light"] .osm-basemap-tiles {
+  filter: none;
+}
