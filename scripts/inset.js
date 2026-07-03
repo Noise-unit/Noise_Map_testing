@@ -66,7 +66,7 @@ if (typeof map === "undefined") {
     {
       subdomains: "abcd",
       maxZoom: 19,
-      className: "osm-basemap-tiles",
+      className: "osm-basemap-tiles", //same class as OSM basemap
     }
   ).addTo(insetMap);
 
