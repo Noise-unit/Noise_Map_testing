@@ -2687,7 +2687,7 @@ body[data-theme="dark"] {
   }
 }
 
-/* Dark Mode OpenStreetMap Basemap */
+/* Dark Mode OpenStreetMap Basemap and inset map */
 
 body[data-theme="dark"] .osm-basemap-tiles {
   filter: brightness(0.85) invert(1) contrast(1.2) hue-rotate(180deg) saturate(0.75);
