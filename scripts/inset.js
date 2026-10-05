@@ -62,7 +62,7 @@ if (typeof map === "undefined") {
 
   // Basemap for inset (light grey)
   L.tileLayer(
-    "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+    "https://a.tile.opentopomap.org/{z}/{x}/{y}.png",
     {
       subdomains: "abcd",
       maxZoom: 19,
