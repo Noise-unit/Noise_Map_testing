@@ -2696,3 +2696,16 @@ body[data-theme="dark"] .osm-basemap-tiles {
 body[data-theme="light"] .osm-basemap-tiles {
   filter: none;
 }
+
+/* Proximity event labels; reference is intentionally a contrasting colour. */
+.leaflet-tooltip.proximity-point-label {
+  border: 1px solid #94a3b8;
+  border-radius: 4px;
+  padding: 2px 5px;
+  font: 700 12px/1.3 system-ui, sans-serif;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  pointer-events: none;
+}
+.leaflet-tooltip.proximity-result-label { color: #0f3b73; background: #fff; }
+.leaflet-tooltip.proximity-reference-label { color: #be123c; background: #fff1f2; border-color: #fb7185; }
