@@ -163,6 +163,7 @@ console.log("✅ proximityPanel.js loaded");
       state.nearbyRadius = Number.isFinite(state.nearbyRadius) ? state.nearbyRadius : 1000;
       state.nearbyDays = Number.isFinite(state.nearbyDays) ? state.nearbyDays : 14;
       state.nearbyDateField = state.nearbyDateField ?? "";
+      state.proximityLabelsOn = state.proximityLabelsOn ?? false;
 
       // Field suggestions
       const possibleRefFields = guessReferenceFields(ds.rows || []);
@@ -217,6 +218,7 @@ console.log("✅ proximityPanel.js loaded");
             <button class="ema-btn primary apply-prox-btn" type="button">Apply Proximity</button>
             <button class="ema-btn ghost clear-prox-btn" type="button">Clear Proximity</button>
             <button class="ema-btn ghost results-prox-btn" type="button">Show Results</button>
+            <button class="ema-btn ghost labels-prox-btn" type="button" aria-pressed="false">Labels: Off</button>
           </div>
         </div>
       `;
@@ -228,6 +230,19 @@ console.log("✅ proximityPanel.js loaded");
       const applyBtn = card.querySelector(".apply-prox-btn");
       const clearBtn = card.querySelector(".clear-prox-btn");
       const resultsBtn = card.querySelector(".results-prox-btn");
+      const labelsBtn = card.querySelector(".labels-prox-btn");
+      function syncLabelsButton() {
+        labelsBtn.textContent = state.proximityLabelsOn ? "Labels: On" : "Labels: Off";
+        labelsBtn.setAttribute("aria-pressed", String(!!state.proximityLabelsOn));
+        labelsBtn.classList.toggle("primary", !!state.proximityLabelsOn);
+        labelsBtn.classList.toggle("ghost", !state.proximityLabelsOn);
+      }
+      syncLabelsButton();
+      labelsBtn.addEventListener("click", () => {
+        state.proximityLabelsOn = !state.proximityLabelsOn;
+        syncLabelsButton();
+        window.ProximityMapPresentation?.toggleLabels(cfg.id, state.proximityLabelsOn);
+      });
 
       nearbyRefInput.value = state.nearbyRef || "";
       nearbyRadiusInput.value = String(state.nearbyRadius ?? 1000);

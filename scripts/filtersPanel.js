@@ -203,6 +203,112 @@ function getVisibleClusterForMarker(clusterGroup, marker) {
   return foundCluster;
 }
 
+  // Proximity map presentation is separate from the filter predicate: the reference
+  // is shown on the map but is not included in matching rows or the results table.
+  const proximityReferenceLayers = new Map();
+  function proximityLabel(row, refField, yearField) {
+    const raw = String(row?.[refField] ?? "").trim();
+    const vr = raw.match(/VR\s*[- ]?\s*(\d+)/i) || raw.match(/^(\d+)$/);
+    const base = vr ? `VR${vr[1]}` : raw;
+    const yearRaw = String(row?.[yearField] ?? "").trim();
+    const year = yearRaw.match(/(?:19|20)\d{2}/)?.[0] ||
+      String(row?.Year ?? row?.year ?? "").match(/(?:19|20)\d{2}/)?.[0];
+    return base + (year ? `/${year}` : "");
+  }
+
+  function clearProximityPresentation(datasetId, ds) {
+    const old = proximityReferenceLayers.get(datasetId);
+    if (old && map.hasLayer(old)) map.removeLayer(old);
+    proximityReferenceLayers.delete(datasetId);
+    for (const marker of ds?.markers || []) {
+      if (marker.__proximityTooltip) {
+        marker.unbindTooltip();
+        marker.__proximityTooltip = false;
+      }
+    }
+  }
+
+  function updateProximityPresentation(datasetId) {
+    const ds = window.AppDataManager?.getDataset(datasetId);
+    if (!ds) return;
+    const state = getState(datasetId);
+    clearProximityPresentation(datasetId, ds);
+    if (!ds.active || !ds.isFiltered || !ds.filterSpec?.nearby?.enabled) return;
+    const spec = ds.filterSpec;
+    const refField = spec.nearby.refField;
+    const refMarker = ds.markers.find(m => isRefMatch(m.__appdataRow?.[refField], spec.nearby.refQuery));
+    if (!refMarker) return;
+
+    const ref = L.circleMarker(refMarker.getLatLng(), {
+      radius: 11, color: "#fff", weight: 3, fillColor: "#e11d48", fillOpacity: 1,
+      interactive: true, pane: "markerPane"
+    });
+    ref.bindPopup(refMarker.getPopup()?.getContent() || escapeHTML(proximityLabel(refMarker.__appdataRow, refField, spec.year?.field)));
+    // Keep the reference label visible and visually distinct when labels are on.
+    if (state.proximityLabelsOn) {
+      ref.bindTooltip(escapeHTML(proximityLabel(refMarker.__appdataRow, refField, spec.year?.field)), {
+        permanent: true, direction: "top", offset: [0, -12],
+        className: "proximity-point-label proximity-reference-label"
+      });
+    }
+    ref.addTo(map);
+    proximityReferenceLayers.set(datasetId, ref);
+
+    if (state.proximityLabelsOn) {
+      for (const marker of ds.filteredMarkers || []) {
+        marker.bindTooltip(escapeHTML(proximityLabel(marker.__appdataRow, refField, spec.year?.field)), {
+          permanent: true, direction: "top", offset: [0, -12],
+          className: "proximity-point-label proximity-result-label"
+        });
+        marker.__proximityTooltip = true;
+      }
+      // Leaflet.markercluster already handles overlapping points via spiderfy.
+      // Open visible same-location clusters when possible; clicking any remaining
+      // cluster also spiderfies its children at maximum zoom.
+      requestAnimationFrame(() => {
+        if (!state.proximityLabelsOn || !ds.cluster || !map.hasLayer(ds.cluster)) return;
+        const group = ds.cluster._featureGroup;
+        if (!group) return;
+        const candidates = [];
+        group.eachLayer(layer => {
+          if (typeof layer.getAllChildMarkers !== "function" || typeof layer.spiderfy !== "function") return;
+          const children = layer.getAllChildMarkers();
+          if (children.length < 2 || children.length > 30 || map.getZoom() < 15) return;
+          const positions = new Set(children.map(m => {
+            const ll = m.getLatLng();
+            return `${ll.lat.toFixed(7)},${ll.lng.toFixed(7)}`;
+          }));
+          if (positions.size < children.length) candidates.push(layer);
+        });
+        // MarkerCluster supports one spiderfied cluster at a time. Opening the
+        // nearest visible overlapping group avoids silently hiding its labels.
+        if (candidates.length) {
+          candidates.sort((a, b) => map.distance(a.getLatLng(), ref.getLatLng()) - map.distance(b.getLatLng(), ref.getLatLng()));
+          candidates[0].spiderfy();
+        }
+      });
+    }
+  }
+
+  window.ProximityMapPresentation = {
+    update: updateProximityPresentation,
+    clear: (id) => {
+      const ds = window.AppDataManager?.getDataset(id);
+      clearProximityPresentation(id, ds);
+    },
+    toggleLabels: (id, enabled) => {
+      getState(id).proximityLabelsOn = !!enabled;
+      updateProximityPresentation(id);
+    }
+  };
+
+  document.addEventListener("appdata:datasetFilterChanged", e => {
+    if (e.detail?.id != null) updateProximityPresentation(e.detail.id);
+  });
+  document.addEventListener("appdata:datasetActiveChanged", () => {
+    for (const id of Object.keys(window.FiltersPanelState)) updateProximityPresentation(id);
+  });
+
   // ----------------------------------------------------
   // Filter summary helpers (for table title/subtitle + PDF)
   // ----------------------------------------------------
